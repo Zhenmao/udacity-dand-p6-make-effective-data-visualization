@@ -277,11 +277,11 @@ function mouseover() {
         .style("opacity", 0.9);
     d3.select(".bubble.month-" + month)
         .transition()
-        .style("stroke", "#000")
+        .style("stroke", "#333")
         .style("stroke-width", 2)
         .duration(500);
     d3.selectAll(".month-label-" + month)
-        .style("fill", "#000");
+        .style("fill", "#333");
 
     // Solve month 9 and 10 overlap problem
     if (month == 9) {

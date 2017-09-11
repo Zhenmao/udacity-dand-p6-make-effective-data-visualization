@@ -134,14 +134,20 @@ function bubbleChart(data) {
         .attr("class", function(d) { return "bubble month-" + d["Month"]; })
         .attr("r", function(d) { return rScale(d["Cancellation"]); })
         .attr("cx", function(d) { return xScale(d["Departure Delay"]); })
-        .attr("cy", function(d) { return yScale(d["Arrival Delay"]); });
+        .attr("cy", function(d) { return yScale(d["Arrival Delay"]); })
+        .on("mouseover", mouseover)
+        .on("mousemove", mousemove)
+        .on("mouseout", mouseout);
 
     bubbles.append("text")
         .attr("class", function(d) { return "bubble-label month-label-" + d["Month"]; })
         .attr("x", function(d){ return xScale(d["Departure Delay"]); })
         .attr("y", function(d){ return yScale(d["Arrival Delay"]) + 5; })
         .attr("text-anchor", "middle")
-        .text(function(d) { return d["Month"]; });
+        .text(function(d) { return d["Month"]; })
+        .on("mouseover", mouseover)
+        .on("mousemove", mousemove)
+        .on("mouseout", mouseout);
 }
 
 function barCharts(data) {
@@ -241,7 +247,10 @@ function barChart(data, idx) {
         .attr("x", function(d) { return xScale(d["Month"]); })
         .attr("width", xScale.bandwidth())
         .attr("y", function(d) { return yScale(d[varName]); })
-        .attr("height", function(d) { return (yAxisHeight - yScale(d[varName])); });
+        .attr("height", function(d) { return (yAxisHeight - yScale(d[varName])); })
+        .on("mouseover", mouseover)
+        .on("mousemove", mousemove)
+        .on("mouseout", mouseout);
 
     bars.append("text")
         .attr("class", function(d) { return "bar-label month-label-" + d["Month"]; })
@@ -250,4 +259,50 @@ function barChart(data, idx) {
         .attr("dy", "1em")
         .attr("text-anchor", "middle")
         .text(function(d) { return d["Month"]; });
+}
+
+// Add tooltip
+var div = d3.select("body")
+    .append("div")
+    .attr("class", "tooltip")
+    .style("display", "none");
+
+// Tooltip number formats
+var formatTooltipPercent = d3.format(".1%");
+
+function mouseover() {
+    div.style("display", "inline-block");
+    var month = d3.select(this).datum()["Month"];
+    d3.selectAll(".month-" + month)
+        .style("opacity", 0.9);
+    d3.select(".bubble.month-" + month)
+        .transition()
+        .style("stroke", "#000")
+        .style("stroke-width", 2)
+        .duration(500);
+    d3.selectAll(".month-label-" + month)
+        .style("fill", "#000");
+}
+
+function mousemove(d) {
+    div.style("left", d3.event.pageX + 20 + "px")
+        .style("top", d3.event.pageY - 10 + "px")
+        .html("Month: <b>" + d["Month"] + "</b><br />" +
+            "Percentage of<br />" +
+            "Departure Delay: <b>" + formatTooltipPercent(d["Departure Delay"]) + "</b><br />" +
+            "Arrival Delay: <b>" + formatTooltipPercent(d["Arrival Delay"]) + "</b><br />" +
+            "Cancellation: <b>" + formatTooltipPercent(d["Cancellation"]) + "</b>");
+}
+
+function mouseout() {
+    div.style("display", "none");
+    var month = d3.select(this).datum()["Month"];
+    d3.selectAll(".month-" + month)
+        .style("opacity", 0.6);
+    d3.select(".bubble.month-" + month)
+        .transition()
+        .style("stroke", "none")
+        .duration(500);
+    d3.selectAll(".month-label-" + month)
+        .style("fill", "#fff");
 }

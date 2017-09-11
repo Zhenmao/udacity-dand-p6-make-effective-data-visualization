@@ -1,0 +1,23 @@
+body {
+      font: 12px sans-serif;
+}
+
+h2 {
+    text-align: center;
+}
+
+.season-winter {
+    color: #80B1D3;
+}
+
+.season-spring {
+    color: #B5CF6B;
+}
+
+.season-summer {
+    color: #D6616B;
+}
+
+.season-fall {
+    color: #E7BA52;
+}

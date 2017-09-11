@@ -282,6 +282,12 @@ function mouseover() {
         .duration(500);
     d3.selectAll(".month-label-" + month)
         .style("fill", "#000");
+
+    // Solve month 9 and 10 overlap problem
+    if (month == 9) {
+        d3.select(".month-label-10")
+            .style("opacity", "0");
+    }
 }
 
 function mousemove(d) {
@@ -305,4 +311,8 @@ function mouseout() {
         .duration(500);
     d3.selectAll(".month-label-" + month)
         .style("fill", "#fff");
+
+    // Solve month 9 and 10 overlap problem
+    d3.select(".month-label-10")
+            .style("opacity", "1");
 }

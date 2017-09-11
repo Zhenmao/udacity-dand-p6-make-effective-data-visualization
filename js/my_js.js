@@ -16,8 +16,21 @@ var chart1 = d3.select("body")
     .attr("class", "bubble-chart")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
+// Append a svg for bar charts
+var chart2 = d3.select("body")
+    .append("div")
+    .attr("class", "chart")
+    .style("display", "inline-block")
+    .append("svg")
+    .attr("id", "chart2")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+    .attr("class", "bar-charts")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-// Get the data, plot the chart
+
+// Get the data, plot the charts
 d3.csv("/data/2008_rates_by_month.csv", function(data) {
     data.forEach(function(d) {
         d["Departure Delay"] = +d["DepDelayed"];
@@ -26,11 +39,13 @@ d3.csv("/data/2008_rates_by_month.csv", function(data) {
     });
 
     bubbleChart(data);
+    barCharts(data);
 });
 
 // Manually set all the axes with the same max and min values for consistency
-var axisMax = 0.31,
-    axisMin = 0.1;
+var axisMax_delay_rate = 0.31,
+    axisMin_delay_rate = 0.1,
+    axisMax_cancel_rate = 0.08;
 
 function bubbleChart(data) {
 
@@ -64,8 +79,8 @@ function bubbleChart(data) {
         .ticks(5);
 
     // Set the domains
-    xScale.domain([axisMin, axisMax]).nice();
-    yScale.domain([axisMin, axisMax]).nice();
+    xScale.domain([axisMin_delay_rate, axisMax_delay_rate]).nice();
+    yScale.domain([axisMin_delay_rate, axisMax_delay_rate]).nice();
     rScale.domain([0, d3.max(data, function(d) { return Math.sqrt(d["Cancellation"]); })]).nice();
 
 
@@ -105,10 +120,10 @@ function bubbleChart(data) {
     // Add diagonal line
     chart1.append("line")
         .attr("class", "diagonal")
-        .attr("x1", xScale(axisMin))
-        .attr("y1", yScale(axisMin))
-        .attr("x2", xScale(axisMax))
-        .attr("y2", yScale(axisMax))
+        .attr("x1", xScale(axisMin_delay_rate))
+        .attr("y1", yScale(axisMin_delay_rate))
+        .attr("x2", xScale(axisMax_delay_rate))
+        .attr("y2", yScale(axisMax_delay_rate))
         .attr("stroke-dasharray", ("5, 5"));
 
     var bubbles = chart1.selectAll(".bubble")
@@ -125,6 +140,114 @@ function bubbleChart(data) {
         .attr("class", function(d) { return "bubble-label month-label-" + d["Month"]; })
         .attr("x", function(d){ return xScale(d["Departure Delay"]); })
         .attr("y", function(d){ return yScale(d["Arrival Delay"]) + 5; })
+        .attr("text-anchor", "middle")
+        .text(function(d) { return d["Month"]; });
+}
+
+function barCharts(data) {
+    /*
+    Bar Chart 1
+    x-axis: Percentage of Departure Delay
+    y-axis: Month
+
+    Bar Chart 2
+    x-axis: Percentage of Arrival Delay
+    y-axis: Month
+
+    Bar Chart 3
+    x-axis: Percentage of Cancellation
+    y-axis: Month
+    */
+
+    // Create a bar plot for each data column
+    n = 3;
+    for (var i = 0; i < n; i ++) {
+        barChart(data, i);
+    }
+
+}
+
+// Sort the data so each bar chart is sorted in increasing order of monthly rates
+function sortMonths(data, varName) {
+    dataSorted = data.sort(function(a, b) { return a[varName] - b[varName]; });
+    return dataSorted;
+}
+
+function barChart(data, idx) {
+
+    // Get the data column name
+    var column_names = ["Departure Delay", "Arrival Delay", "Cancellation"]
+    var varName = column_names[idx];
+
+    // Sort the data by the column varName
+    var dataSorted = sortMonths(data, varName)
+
+    // Define the scales
+    var xScale = d3.scaleBand()
+        .range([0, width])
+        .paddingInner(0.1)
+        .paddingOuter(0.6);
+
+    var yAxisHeight = height / n - 20;
+    var yScale = d3.scaleLinear()
+        .range([yAxisHeight, 0])
+
+    // Define the axes
+    var xAxis = d3.axisBottom()
+        .scale(xScale)
+        .ticks(12);
+
+    var yAxis = d3.axisLeft()
+        .scale(yScale)
+        .tickFormat(function(d) { return Math.floor(parseFloat(d) * 100); })
+        .ticks(4);
+
+    // Set the domains
+    xScale.domain(dataSorted.map(function(d) { return d["Month"]; }));
+    if (varName == "Departure Delay" || varName == "Arrival Delay") {
+        yScale.domain([0, axisMax_delay_rate]);
+    } else if (varName == "Cancellation") {
+        yScale.domain([0, axisMax_cancel_rate]);
+    }
+
+    // Append a g for bar chart
+    var barChart = chart2.append("g")
+        .attr("class", "bar-chart")
+        .attr("transform", "translate(0," + (idx * height / n + 20) + ")");
+
+    // Add the axes
+    barChart.append("g")
+        .attr("class", "y axis")
+        .call(yAxis)
+        .append("text")
+        .attr("class", "label")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 6)
+        .attr("dy", ".71em")
+        .style("text-anchor", "end")
+        .append("tspan")
+        .style("font-weight", "bold")
+        .text(varName)
+        .append("tspan")
+        .style("font-weight", "normal")
+        .text(" (%)");
+
+    var bars = barChart.selectAll(".bar")
+        .data(dataSorted)
+        .enter();
+
+    bars.append("rect")
+        .attr("class", function(d) { return "bar month-" + d["Month"]; })
+        .attr("x", function(d) { return xScale(d["Month"]); })
+        .attr("width", xScale.bandwidth())
+        .attr("y", function(d) { return yScale(d[varName]); })
+        .attr("height", function(d) { return (yAxisHeight - yScale(d[varName])); });
+
+    bars.append("text")
+        .attr("class", function(d) { return "bar-label month-label-" + d["Month"]; })
+        .attr("x", function(d) { return xScale(d["Month"]) + xScale.bandwidth() / 2; })
+        .attr("y", function(d) { return yScale(d[varName]); })
+        .attr("dy", "1em")
         .attr("text-anchor", "middle")
         .text(function(d) { return d["Month"]; });
 }

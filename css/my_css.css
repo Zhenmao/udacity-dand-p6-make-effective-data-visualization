@@ -68,3 +68,18 @@ h2 {
 .month-11 {
     fill: #E7BA52;
 }
+
+.tooltip {
+    position: absolute;
+    text-align: center;
+    min-width: 100px;
+    height: auto;
+    padding: 8px;
+    margin-top: -20px;
+    font: 11px sans-serif;
+    background: none repeat scroll 0 0 #fff;
+    border: 1px solid #eee;
+    opacity: 0.9;
+    pointer-events: none;
+    text-shadow: 1px 1px 0px #fff;
+}

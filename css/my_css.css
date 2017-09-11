@@ -22,11 +22,13 @@ h2 {
     fill: #000;
 }
 
-.bubble {
+.bubble,
+.bar {
     opacity: 0.6;
 }
 
-.bubble-label {
+.bubble-label,
+.bar-label {
     fill: #fff;
     font-weight: bold
 }
